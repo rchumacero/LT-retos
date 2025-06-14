@@ -1,4 +1,4 @@
-name: Crear issue al realizar commit
+name: Crear un issue para correccion FIX
 
 on:
   push:
@@ -6,22 +6,27 @@ on:
       - main
 
 jobs:
-  create-issue:
+  create-issue-if-fix:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Crear issue
+      - name: Crear issue si commit contiene la palabra 'fix'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const commitMessage = context.payload.head_commit.message;
-            const author = context.payload.head_commit.author.name;
+            const commit = context.payload.head_commit;
+            const commitMessage = commit.message;
+            const author = commit.author.name;
 
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `New commit by ${author}`,
-              body: `A new commit was pushed:\n\n**Message:** ${commitMessage}\n\n[View Commit](${context.payload.head_commit.url})`,
-              labels: ['automated', 'commit']
-            });
+            if (/fix/i.test(commitMessage)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Fix Commit por ${author}`,
+                body: `Se comiteo un commit para correccion FIX:\n\n**Mensaje:** ${commitMessage}\n\n[View Commit](${commit.url})`,
+                labels: ['fix', 'automated']
+              });
+            } else {
+              console.log("No se encontro 'fix' en el mensaje del commit. No se creo ningun issue.");
+            }
