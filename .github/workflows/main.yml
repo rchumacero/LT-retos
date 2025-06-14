@@ -1,0 +1,27 @@
+name: Crear issue al realizar commit
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Crear issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commitMessage = context.payload.head_commit.message;
+            const author = context.payload.head_commit.author.name;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `New commit by ${author}`,
+              body: `A new commit was pushed:\n\n**Message:** ${commitMessage}\n\n[View Commit](${context.payload.head_commit.url})`,
+              labels: ['automated', 'commit']
+            });
